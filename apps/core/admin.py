@@ -1,6 +1,28 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 
-from apps.core.models import Answer, AnswerStatistic, Poll, PollStatistic, Question
+from apps.core.models import Answer, AnswerStatistic, Poll, PollStatistic, Profile, Question
+
+User = get_user_model()
+
+
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class ProfileUserAdmin(UserAdmin):
+    inlines = [ProfileInline]
+
+    def get_inline_instances(self, request, obj=None):
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj)
 
 
 class QuestionInline(admin.TabularInline):

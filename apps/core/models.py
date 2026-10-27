@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from apps.core.mixins import CreatedMixin, UpdatedMixin
 
@@ -233,3 +235,21 @@ class AnswerStatistic(models.Model):
 
 
 
+class Profile(models.Model):
+    user = models.OneToOneField(
+        User,
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE,
+        related_name='profile',
+    )
+
+    is_editor = models.BooleanField(
+        verbose_name='Редактор',
+        default=False,
+    )
+
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.get_or_create(user=instance)
