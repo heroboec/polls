@@ -116,6 +116,7 @@ class State(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='poll_states',
     )
 
     poll = models.ForeignKey(
@@ -123,6 +124,7 @@ class State(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='states',
     )
 
     answered_count = models.IntegerField(
@@ -196,6 +198,7 @@ class PollStatistic(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='statistic',
     )
 
     started = models.PositiveIntegerField(
@@ -220,6 +223,7 @@ class AnswerStatistic(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='statistic',
     )
 
     choices_count = models.PositiveIntegerField(
