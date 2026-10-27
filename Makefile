@@ -9,6 +9,9 @@ up:
 down:
 	$(COMPOSE) down
 
+down-v:
+	$(COMPOSE) down -v
+
 build:
 	$(COMPOSE) build
 
