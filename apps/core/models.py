@@ -29,6 +29,9 @@ class Poll(CreatedMixin, UpdatedMixin, models.Model):
         default=False,
     )
 
+    def __str__(self):
+        return self.title
+
 
 class Question(models.Model):
     poll = models.ForeignKey(
@@ -57,6 +60,9 @@ class Question(models.Model):
     class Meta:
         ordering = ['sort_index', 'id']
 
+    def __str__(self):
+        return self.title
+
 
 class Answer(models.Model):
     question = models.ForeignKey(
@@ -70,7 +76,7 @@ class Answer(models.Model):
     title = models.CharField(
         verbose_name='Вариант ответа',
         max_length=200,
-        blank=False,
+        blank=True,
         null=False,
         default='',
     )
@@ -86,6 +92,9 @@ class Answer(models.Model):
         verbose_name='Это вопрос со свободным ответом',
         default=False,
     )
+
+    def __str__(self):
+        return self.title
 
 
 class State(models.Model):
