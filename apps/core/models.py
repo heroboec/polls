@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import Q
 
-from core.mixins import CreatedMixin, UpdatedMixin
+from apps.core.mixins import CreatedMixin, UpdatedMixin
 
 User = get_user_model()
 
@@ -158,6 +159,9 @@ class UserChoice(models.Model):
                 fields=['poll_state', 'question'],
                 name='question_user_uniq',
             ),
+        ]
+        # тут сможем поиметь список свободных ответов
+        indexes = [
             models.Index(
                 fields=['question'],
                 name='userchoice_open_answers_idx',
