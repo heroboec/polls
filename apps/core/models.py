@@ -21,6 +21,12 @@ class Poll(CreatedMixin, UpdatedMixin, models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='polls',
+    )
+
+    is_active = models.BooleanField(
+        verbose_name='Флаг публикации',
+        default=False,
     )
 
 
@@ -30,6 +36,7 @@ class Question(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='questions',
     )
 
     title = models.CharField(
@@ -47,6 +54,9 @@ class Question(models.Model):
         default=1,
     )
 
+    class Meta:
+        ordering = ['sort_index', 'id']
+
 
 class Answer(models.Model):
     question = models.ForeignKey(
@@ -54,6 +64,7 @@ class Answer(models.Model):
         blank=False,
         null=False,
         on_delete=models.CASCADE,
+        related_name='answers',
     )
 
     title = models.CharField(
@@ -105,8 +116,8 @@ class State(models.Model):
         on_delete=models.CASCADE,
     )
 
-    last_question_index = models.IntegerField(
-        verbose_name='Индекс последнего отвеченного вопроса',
+    answered_count = models.IntegerField(
+        verbose_name='Количество отв. вопросов',
         blank=False,
         null=False,
         default=0,
