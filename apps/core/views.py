@@ -1,5 +1,6 @@
 from django.db import transaction
-from django.db.models import Case, Exists, F, OuterRef, Value, When
+from django.db.models import Case, Exists, F, OuterRef, Prefetch, Value, When
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -9,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
-from apps.core.models import AnswerStatistic, Poll, PollStatistic, State
+from apps.core.models import Answer, AnswerStatistic, Poll, PollStatistic, State
 from apps.core.serializers import NextQuestionSerializer, PollListSerializer, UserChoicePostSerializer
 from apps.core.utils import get_current_question, get_or_start_state, get_poll
 
@@ -50,6 +51,7 @@ class NextQuestionView(APIView):
             "total": questions.count(),
             "question": question,
         }
+        
         return Response(NextQuestionSerializer(data).data)
 
 
@@ -119,6 +121,57 @@ class PollStatisticView(APIView):
     permission_classes = [IsAuthenticated, IsEditor]
 
     def get(self, request, poll_id):
-        get_object_or_404(Poll, pk=poll_id)
-        return Response({})
+        poll = get_object_or_404(Poll, pk=poll_id)
+
+        statistic = PollStatistic.objects.filter(poll=poll).first()
+        if not statistic:
+            # тут делаем вид, что у нас есть статистика, даже если ее еще нет
+            statistic = PollStatistic(poll=poll)
+
+        # популярные варианты первыми
+        answers = Answer.objects.annotate(
+            choices_count=Coalesce(
+                F("statistic__choices_count"),
+                0,
+            ),
+        ).order_by(
+            "-choices_count",
+            "sort_index",
+            "id",
+        )
+
+        questions = poll.questions.prefetch_related(Prefetch("answers", queryset=answers))
+
+        avg_duration_sec = None
+        if statistic.completed:
+            avg_duration_sec = round(statistic.total_duration_sec / statistic.completed)
+
+        result = {
+            "poll": poll.id,
+            "title": poll.title,
+            "started": statistic.started,
+            "completed": statistic.completed,
+            "avg_duration_sec": avg_duration_sec,
+            "questions": [],
+        }
+
+        for question in questions:
+            question_result = {
+                "id": question.id,
+                "title": question.title,
+                "answers_count": 0,
+                "answers": [],
+            }
+
+            for answer in question.answers.all():
+                question_result["answers_count"] += answer.choices_count
+                question_result["answers"].append({
+                    "id": answer.id,
+                    "title": answer.title,
+                    "choices_count": answer.choices_count,
+                })
+
+            result["questions"].append(question_result)
+
+        return Response(result)
 
